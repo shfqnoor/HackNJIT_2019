@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 
-boxXMin = 20
-boxXMax = 250
+boxXMin = 60
+boxXMax = 200
 boxYMin = 20
 boxYMax = 250
 
@@ -82,8 +82,8 @@ def calibrate(cap):
         # Create box
         frame = drawBox(frame)
 
-        cv2.imshow('frame', frame)
         cv2.imshow('threshold', tFrame)
+        cv2.imshow('frame', frame)
 
         key = cv2.waitKey(1) & 0xFF
 
@@ -97,8 +97,21 @@ def calibrate(cap):
             if key2 == ord('c'):
                 continue
             elif key2 == ord('q'):
-                break
-
+                cv2.destroyAllWindows()
+                return findHandColor(roi2)
 
         elif key == ord('q'):
-            break
+            return None
+
+def findHandColor(frame):
+    r,c,_ = frame.shape
+    hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    #roi = np.zeros([r,c,3], dtype=hsvFrame.dtype)
+
+    hand_hist = cv2.calcHist([hsvFrame], [0, 1], None, [180, 256], [0, 180, 0, 256])
+    return cv2.normalize(hand_hist, hand_hist, 0, 255, cv2.NORM_MINMAX)
+
+def filterImageForHand(frame, histogram):
+    backProject = cv2.calcBackProject([frame], [0,1], histogram, [0, 180, 0, 256], scale=1)
+    cv2.imshow('BackProj', backProject)
+
